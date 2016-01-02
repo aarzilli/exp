@@ -40,6 +40,7 @@ type screenImpl struct {
 	atomWMTakeFocus    xproto.Atom
 	atomNetWMName      xproto.Atom
 	atomUTF8String     xproto.Atom
+	cursorCache        map[screen.Cursor]xproto.Cursor
 
 	pixelsPerPt  float32
 	pictformat24 render.Pictformat
@@ -75,6 +76,9 @@ func newScreenImpl(xc *xgb.Conn) (*screenImpl, error) {
 		windows: map[xproto.Window]*windowImpl{},
 	}
 	if err := s.initAtoms(); err != nil {
+		return nil, err
+	}
+	if err := s.initCursors(); err != nil {
 		return nil, err
 	}
 	if err := s.initKeyboardMapping(); err != nil {
@@ -477,6 +481,60 @@ func (s *screenImpl) internAtom(name string) (xproto.Atom, error) {
 		return 0, fmt.Errorf("x11driver: xproto.InternAtom failed")
 	}
 	return r.Atom, nil
+}
+
+func (s *screenImpl) initCursors() error {
+	xc := s.xc
+	s.cursorCache = make(map[screen.Cursor]xproto.Cursor)
+	s.cursorCache[screen.NormalCursor] = 0
+
+	fontId, err := xproto.NewFontId(xc)
+	if err != nil {
+		return err
+	}
+
+	err = xproto.OpenFontChecked(xc, fontId, uint16(len("cursor")), "cursor").Check()
+	if err != nil {
+		return err
+	}
+
+	s.cursorCache[screen.ResizeNCursor] = s.createCursor(fontId, 138)
+	s.cursorCache[screen.ResizeECursor] = s.createCursor(fontId, 96)
+	s.cursorCache[screen.ResizeSCursor] = s.createCursor(fontId, 16)
+	s.cursorCache[screen.ResizeWCursor] = s.createCursor(fontId, 70)
+	s.cursorCache[screen.ResizeEWCursor] = s.createCursor(fontId, 108)
+	s.cursorCache[screen.ResizeNSCursor] = s.createCursor(fontId, 116)
+	s.cursorCache[screen.ResizeNECursor] = s.createCursor(fontId, 136)
+	s.cursorCache[screen.ResizeSECursor] = s.createCursor(fontId, 14)
+	s.cursorCache[screen.ResizeSWCursor] = s.createCursor(fontId, 12)
+	s.cursorCache[screen.ResizeNWCursor] = s.createCursor(fontId, 134)
+	s.cursorCache[screen.CrosshairCursor] = s.createCursor(fontId, 34)
+	s.cursorCache[screen.IBeamCursor] = s.createCursor(fontId, 152)
+	s.cursorCache[screen.GrabHoverCursor] = s.createCursor(fontId, 58)
+	s.cursorCache[screen.GrabActiveCursor] = s.createCursor(fontId, 60)
+	s.cursorCache[screen.NotAllowedCursor] = s.createCursor(fontId, 56)
+	s.cursorCache[screen.FleurCursor] = s.createCursor(fontId, 52)
+
+	err = xproto.CloseFontChecked(xc, fontId).Check()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *screenImpl) createCursor(fontId xproto.Font, cursor uint16) xproto.Cursor {
+	cursorId, err := xproto.NewCursorId(s.xc)
+	if err != nil {
+		return 0
+	}
+
+	err = xproto.CreateGlyphCursorChecked(s.xc, cursorId, fontId, fontId, cursor, cursor+1, 0, 0, 0, 0xffff, 0xffff, 0xffff).Check()
+	if err != nil {
+		return 0
+	}
+
+	return cursorId
 }
 
 func (s *screenImpl) initKeyboardMapping() error {

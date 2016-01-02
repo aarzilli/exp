@@ -219,6 +219,7 @@ type Window interface {
 	Publish() PublishResult
 
 	SetTitle(string) error
+	SetCursor(Cursor) error
 }
 
 // PublishResult is the result of an Window.Publish call.
@@ -354,3 +355,26 @@ type DrawOptions struct {
 	// TODO: transparency in [0x0000, 0xffff]?
 	// TODO: scaler (nearest neighbor vs linear)?
 }
+
+type Cursor int
+
+const (
+	NoneCursor Cursor = iota
+	NormalCursor
+	ResizeNCursor
+	ResizeECursor
+	ResizeSCursor
+	ResizeWCursor
+	ResizeEWCursor
+	ResizeNSCursor
+	ResizeNECursor
+	ResizeSECursor
+	ResizeSWCursor
+	ResizeNWCursor
+	CrosshairCursor
+	IBeamCursor
+	GrabHoverCursor
+	GrabActiveCursor
+	NotAllowedCursor
+	FleurCursor
+)

@@ -15,7 +15,6 @@ import (
 	"github.com/BurntSushi/xgb"
 	"github.com/BurntSushi/xgb/render"
 	"github.com/BurntSushi/xgb/xproto"
-	"github.com/BurntSushi/xgbutil"
 
 	"golang.org/x/exp/shiny/driver/internal/drawer"
 	"golang.org/x/exp/shiny/driver/internal/event"
@@ -110,6 +109,13 @@ func (w *windowImpl) Publish() screen.PublishResult {
 func (w *windowImpl) SetTitle(title string) error {
 	buf := []byte(title)
 	return xproto.ChangePropertyChecked(w.s.xc, xproto.PropModeReplace, w.xw, w.s.atomNetWMName, w.s.atomUTF8String, 8, uint32(len(buf)), buf).Check()
+}
+
+func (w *windowImpl) SetCursor(cursor screen.Cursor) error {
+	if cursorId, ok := w.s.cursorCache[cursor]; ok {
+		xproto.ChangeWindowAttributes(w.s.xc, w.xw, xproto.CwCursor, []uint32{uint32(cursorId)})
+	}
+	return nil
 }
 
 func (w *windowImpl) handleConfigureNotify(ev xproto.ConfigureNotifyEvent) {
