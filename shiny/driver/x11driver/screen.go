@@ -38,6 +38,8 @@ type screenImpl struct {
 	atomWMDeleteWindow xproto.Atom
 	atomWMProtocols    xproto.Atom
 	atomWMTakeFocus    xproto.Atom
+	atomNetWMName      xproto.Atom
+	atomUTF8String     xproto.Atom
 
 	pixelsPerPt  float32
 	pictformat24 render.Pictformat
@@ -452,6 +454,14 @@ func (s *screenImpl) initAtoms() (err error) {
 		return err
 	}
 	s.atomWMTakeFocus, err = s.internAtom("WM_TAKE_FOCUS")
+	if err != nil {
+		return err
+	}
+	s.atomNetWMName, err = s.internAtom("_NET_WM_NAME")
+	if err != nil {
+		return err
+	}
+	s.atomUTF8String, err = s.internAtom("UTF8_STRING")
 	if err != nil {
 		return err
 	}
