@@ -118,6 +118,36 @@ func (w *windowImpl) SetCursor(cursor screen.Cursor) error {
 	return nil
 }
 
+func (w *windowImpl) WarpMouse(p image.Point) error {
+	gifr, err := xproto.GetInputFocus(w.s.xc).Reply()
+	if err != nil {
+		return err
+	}
+
+	if gifr.Focus != w.xw {
+		return nil
+	}
+
+	screen := xproto.Setup(w.s.xc).DefaultScreen(w.s.xc)
+	tp, err := w.translateToScreen(screen, p)
+	if err != nil {
+		return err
+	}
+	wpc := xproto.WarpPointerChecked(w.s.xc, 0, screen.Root, 0, 0, 0, 0, int16(tp.X), int16(tp.Y))
+	return wpc.Check()
+}
+
+func (w *windowImpl) translateToScreen(screen *xproto.ScreenInfo, p image.Point) (r image.Point, err error) {
+	tcc := xproto.TranslateCoordinates(w.s.xc, w.xw, screen.Root, int16(p.X), int16(p.Y))
+	tcr, err := tcc.Reply()
+	if err != nil {
+		return
+	}
+	r.X = int(tcr.DstX)
+	r.Y = int(tcr.DstY)
+	return
+}
+
 func (w *windowImpl) handleConfigureNotify(ev xproto.ConfigureNotifyEvent) {
 	// TODO: does the order of these lifecycle and size events matter? Should
 	// they really be a single, atomic event?

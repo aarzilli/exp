@@ -220,6 +220,7 @@ type Window interface {
 
 	SetTitle(string) error
 	SetCursor(Cursor) error
+	WarpMouse(p image.Point) error
 }
 
 // PublishResult is the result of an Window.Publish call.
