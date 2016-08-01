@@ -5,12 +5,10 @@
 package x11driver
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
 	"log"
-	"os"
 	"sync"
 	"unsafe"
 
@@ -141,7 +139,7 @@ func (b *bufferImpl) upload(xd xproto.Drawable, xg xproto.Gcontext, depth uint8,
 		b.s.nPendingUploads--
 		b.s.handleCompletions()
 		b.s.mu.Unlock()
-		fmt.Fprintf(os.Stderr, "Error drawing image size:%v sr:%v, dr:%v, depth:%v, %v\n", b.size, sr, dr, depth, err)
+		//fmt.Fprintf(os.Stderr, "Error drawing image size:%v sr:%v, dr:%v, depth:%v, %v\n", b.size, sr, dr, depth, err)
 		return
 	}
 
